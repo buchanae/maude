@@ -2,6 +2,7 @@ package main
 
 import (
   "fmt"
+  "flag"
   pathlib "path"
   "html/template"
   "path/filepath"
@@ -17,7 +18,11 @@ import (
   "github.com/alecthomas/chroma/quick"
 )
 
-const basePath = "/buchanan/web"
+var basePath = ""
+
+func init() {
+  flag.StringVar(&basePath, "base", basePath, "base path")
+}
 
 func isIndex(path string) (string, bool) {
   potential := []string{"index.html", "index.md"}
@@ -208,6 +213,7 @@ func filterSuffix(files []os.FileInfo, suffix string) []os.FileInfo {
 
 func main() {
   log.Println("Hello, Maude.")
+  flag.Parse()
 
   handle := http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
     path := strings.TrimPrefix(req.URL.Path, "/")
