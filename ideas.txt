@@ -1,0 +1,35 @@
+image thumbnails
+stylesheet for markdown
+render notebooks
+icons for filetypes
+render readme in directory list page
+file metadata
+"home" link
+render templates
+grid view
+- save preference per directory?
+- auto grid for directory of images?
+git repo 
+- commits
+
+funnel tasks
+
+render API docs
+render csv/tsv
+render json/yaml
+
+back by s3/gs/etc
+
+render programming languages with code highlighting
+
+keyboard control
+- filter/search
+
+
+temporal view:
+- directory listing is spatial, but temporal could bring out the patterns in my work,
+  showing the set of files I worked on over time, clustered together.
+
+
+"powered by Maude" footer
+

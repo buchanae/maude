@@ -1,0 +1,18 @@
+<!doctype html>
+<html>
+<head>
+  <title>Maude</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700">
+  <link rel="stylesheet" href="{{ .Styles }}">
+</head>
+<body>
+<div class="dirlist-wrapper">
+  <ul class="dirlist">
+  {{ range .List }}
+    <li><a href="{{ .HREF }}">{{ .Name }}</a></li>
+  {{ end }}
+  </ul>
+</div>
+
+</body>
+</html>
