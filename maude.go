@@ -11,13 +11,13 @@ import (
   "os"
   "strings"
   "net/http"
-  urllib "net/url"
+  //urllib "net/url"
 
   "gopkg.in/russross/blackfriday.v2"
   "github.com/alecthomas/chroma/quick"
 )
 
-const basePath = "/buchanan"
+const basePath = "/buchanan/web"
 
 func isIndex(path string) (string, bool) {
   potential := []string{"index.html", "index.md"}
@@ -42,7 +42,7 @@ func sendfile(w http.ResponseWriter, path string) {
     w.Header().Set("Content-Type", "text/css")
   case ".md":
     w.Header().Set("Content-Type", "text/html")
-  case ".go":
+  case ".go", ".py", ".bash", ".sh":
     w.Header().Set("Content-Type", "text/html")
   default:
     w.Header().Set("Content-Type", "text/plain")
@@ -63,6 +63,30 @@ func sendfile(w http.ResponseWriter, path string) {
       return
     }
     err = quick.Highlight(w, string(inb), "go", "html", "monokai")
+    if err != nil {
+      fmt.Fprintln(w, err)
+      return
+    }
+
+  case ".py":
+    inb, err := ioutil.ReadAll(f)
+    if err != nil {
+      fmt.Fprintln(w, err)
+      return
+    }
+    err = quick.Highlight(w, string(inb), "py", "html", "monokai")
+    if err != nil {
+      fmt.Fprintln(w, err)
+      return
+    }
+
+  case ".sh", ".bash":
+    inb, err := ioutil.ReadAll(f)
+    if err != nil {
+      fmt.Fprintln(w, err)
+      return
+    }
+    err = quick.Highlight(w, string(inb), "bash", "html", "monokai")
     if err != nil {
       fmt.Fprintln(w, err)
       return
@@ -110,15 +134,19 @@ func listdir(w http.ResponseWriter, req *http.Request, path string) {
   }
 
   files = filterPrefix(files, ".")
+  files = filterPrefix(files, "venv")
   files = filterPrefix(files, "_")
+  files = filterSuffix(files, ".pyc")
 
   var list []dirent
 
+  /*
   if req.URL.Path != "/" {
     up, _ := urllib.Parse("./..")
     u := req.URL.ResolveReference(up)
     list = append(list, dirent{Name: "..", HREF: newurl(u.String())})
   }
+  */
 
   for _, file := range files {
     name := file.Name()
@@ -166,6 +194,17 @@ func filterPrefix(files []os.FileInfo, prefix string) []os.FileInfo {
   }
   return out
 }
+func filterSuffix(files []os.FileInfo, suffix string) []os.FileInfo {
+  var out []os.FileInfo
+  for _, f := range files {
+    name := f.Name()
+    if strings.HasSuffix(name, suffix) {
+      continue
+    }
+    out = append(out, f)
+  }
+  return out
+}
 
 func main() {
   log.Println("Hello, Maude.")
@@ -187,13 +226,14 @@ func main() {
         // TODO correctly handle file mime types, e.g. for .css files
         //      fall back to net/http/FileServer?
 
-        /*
+        // TODO things are very broken here
         url := req.URL.Path
-		    if len(url) == 0 || url[len(url)-1] != '/' {
-          localRedirect(w, req, newurl("/"+pathlib.Base(url)+"/"))
+		    if len(url) != 0 && url[len(url)-1] != '/' {
+          target := newurl("/"+url+"/") + "/"
+          log.Println("redirect", target)
+          localRedirect(w, req, target)
           return
         }
-        */
 
         if indexPath, ok := isIndex(path); ok {
           sendfile(w, indexPath)
