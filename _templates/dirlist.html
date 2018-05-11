@@ -10,7 +10,7 @@
 <body>
   <ul class="breadcrumbs">
     {{ range $index, $element := .Parts }}
-      <li>{{if $index}}<span class="crumb-sep">/</span>{{end}}<a href="{{ $element.Path }}">{{ $element.Name }}</a></li>
+      <li>{{if $index}}<span class="crumb-sep">/</span>{{end}}{{ if $element.Path }}<a href="{{ $element.Path }}">{{ $element.Name }}</a>{{ else }}{{ $element.Name }}{{ end }}</li>
     {{ end }}
   </ul>
 <div class="dirlist-wrapper">

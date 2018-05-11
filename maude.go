@@ -15,7 +15,9 @@ import (
   //urllib "net/url"
 
   "gopkg.in/russross/blackfriday.v2"
-  "github.com/alecthomas/chroma/quick"
+  "github.com/alecthomas/chroma/lexers"
+  "github.com/alecthomas/chroma/formatters"
+  "github.com/alecthomas/chroma/styles"
   "github.com/elazarl/go-bindata-assetfs"
 )
 
@@ -23,6 +25,40 @@ var basePath = ""
 
 func init() {
   flag.StringVar(&basePath, "base", basePath, "base path")
+}
+
+var errUnidentifiedLanguage = fmt.Errorf("source language cannot be identified")
+
+func highlight(w io.Writer, filename string) error {
+  lexer := lexers.Match(filename)
+  if lexer == nil {
+    return errUnidentifiedLanguage
+  }
+
+  style := styles.Get("monokai")
+  formatter := formatters.Get("html")
+
+  f, err := os.Open(filename)
+  if err != nil {
+    return err
+  }
+  defer f.Close()
+
+  content, err := ioutil.ReadAll(f)
+  if err != nil {
+    return err
+  }
+
+  iterator, err := lexer.Tokenise(nil, string(content))
+  if err != nil {
+    return err
+  }
+
+  err = formatter.Format(w, style, iterator)
+  if err != nil {
+    return err
+  }
+  return nil
 }
 
 func isIndex(path string) (string, bool) {
@@ -38,94 +74,68 @@ func isIndex(path string) (string, bool) {
   return "", false
 }
 
-func sendfile(w http.ResponseWriter, path string) {
-
-  ext := filepath.Ext(path)
-  switch ext {
-  case ".html":
-    w.Header().Set("Content-Type", "text/html")
-  case ".css":
-    w.Header().Set("Content-Type", "text/css")
-  case ".md":
-    w.Header().Set("Content-Type", "text/html")
-  case ".go", ".py", ".bash", ".sh":
-    w.Header().Set("Content-Type", "text/html")
-  default:
-    w.Header().Set("Content-Type", "text/plain")
-  }
+func markdownPage(w io.Writer, path string) error {
 
   f, err := os.Open(path)
   if err != nil {
-    fmt.Fprintln(w, err)
-    return
+    return err
   }
   defer f.Close()
 
+  inb, err := ioutil.ReadAll(f)
+  if err != nil {
+    return err
+  }
+  b := blackfriday.Run(inb)
+
+  pageTplBytes := MustAsset("page.html")
+  pageTpl := template.Must(template.New("page").Parse(string(pageTplBytes)))
+  return pageTpl.Execute(w, map[string]interface{}{
+    "Title": pathlib.Base(path),
+    "Parts": crumbs(path),
+    "Styles": pathlib.Clean("/" + pathlib.Join(basePath, "_templates", "style.css")),
+    "Content": template.HTML(b),
+  })
+}
+
+func sendfile(w http.ResponseWriter, path string) {
+
+  var err error
+  ext := filepath.Ext(path)
+
   switch ext {
-  case ".go":
-    inb, err := ioutil.ReadAll(f)
-    if err != nil {
-      fmt.Fprintln(w, err)
-      return
-    }
-    err = quick.Highlight(w, string(inb), "go", "html", "monokai")
-    if err != nil {
-      fmt.Fprintln(w, err)
-      return
-    }
-
-  case ".py":
-    inb, err := ioutil.ReadAll(f)
-    if err != nil {
-      fmt.Fprintln(w, err)
-      return
-    }
-    err = quick.Highlight(w, string(inb), "py", "html", "monokai")
-    if err != nil {
-      fmt.Fprintln(w, err)
-      return
-    }
-
-  case ".sh", ".bash":
-    inb, err := ioutil.ReadAll(f)
-    if err != nil {
-      fmt.Fprintln(w, err)
-      return
-    }
-    err = quick.Highlight(w, string(inb), "bash", "html", "monokai")
-    if err != nil {
-      fmt.Fprintln(w, err)
-      return
-    }
-
+  case ".css":
+    w.Header().Set("Content-Type", "text/css")
+    err = sendRaw(w, path)
+  case ".html":
+    w.Header().Set("Content-Type", "text/html")
+    err = sendRaw(w, path)
   case ".md":
-    inb, err := ioutil.ReadAll(f)
-    if err != nil {
-      fmt.Fprintln(w, err)
-      return
-    }
-    b := blackfriday.Run(inb)
-
-    pageTplBytes := MustAsset("page.html")
-    pageTpl := template.Must(template.New("page").Parse(string(pageTplBytes)))
-    err = pageTpl.Execute(w, map[string]interface{}{
-      "Title": pathlib.Base(path),
-      "Parts": crumbs(path),
-      "Styles": pathlib.Join(basePath, "_templates", "style.css"),
-      "Content": template.HTML(b),
-    })
-    if err != nil {
-      fmt.Fprintln(w, err)
-      return
-    }
-
+    w.Header().Set("Content-Type", "text/html")
+    err = markdownPage(w, path)
   default:
-    _, err = io.Copy(w, f)
-    if err != nil {
-      fmt.Fprintln(w, err)
-      return
+    err = highlight(w, path)
+    if err == nil {
+      w.Header().Set("Content-Type", "text/html")
+    }
+    if err == errUnidentifiedLanguage {
+      err = sendRaw(w, path)
     }
   }
+
+  if err != nil {
+    fmt.Fprintln(w, err)
+  }
+}
+
+func sendRaw(w io.Writer, filename string) error {
+  f, err := os.Open(filename)
+  if err != nil {
+    return err
+  }
+  defer f.Close()
+  _, err = io.Copy(w, f)
+  return err
 }
 
 func newurl(p string) string {
@@ -191,7 +201,7 @@ func listdir(w http.ResponseWriter, req *http.Request, path string) {
     "Title": pathlib.Base(path),
     "Parts": crumbs(path),
     "List": list,
-    "Styles": pathlib.Join(basePath, "_templates", "style.css"),
+    "Styles": pathlib.Clean("/" + pathlib.Join(basePath, "_templates", "style.css")),
     "Readme": template.HTML(readme),
   })
   if err != nil {
@@ -208,14 +218,20 @@ type crumb struct {
 func crumbs(path string) []crumb {
   var p string
   out := []crumb{
-    {Name: "home", Path: pathlib.Clean(pathlib.Join("/", basePath)) + "/"},
+    {Name: "home", Path: pathlib.Clean(pathlib.Join("/", basePath))},
   }
   parts := strings.Split(path, "/")
   for _, part := range parts {
+    if part == "." {
+      continue
+    }
     if part != "" {
       p = pathlib.Join(p, part)
       out = append(out, crumb{Name: part, Path: pathlib.Clean(pathlib.Join("/", basePath, p, "/")) + "/"})
     }
+  }
+  if len(out) > 1 {
+    out[len(out)-1].Path = ""
   }
   return out
 }

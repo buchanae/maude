@@ -1,11 +1,8 @@
-image thumbnails
 render notebooks
 file metadata
 render templates
 
-grid view
-- save preference per directory?
-- auto grid for directory of images?
+back by s3/gs/etc
 
 git repo 
 - commits
@@ -15,10 +12,14 @@ funnel tasks
 render csv/tsv
 render json/yaml
 
-back by s3/gs/etc
+image thumbnails
 
 keyboard control
 - filter/search
+
+grid view
+- save preference per directory?
+- auto grid for directory of images?
 
 temporal view:
 - directory listing is spatial, but temporal could bring out the patterns in my work,
