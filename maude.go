@@ -105,7 +105,15 @@ func sendfile(w http.ResponseWriter, path string) {
       return
     }
     b := blackfriday.Run(inb)
-    _, err = w.Write(b)
+
+    pageTplBytes := MustAsset("page.html")
+    pageTpl := template.Must(template.New("page").Parse(string(pageTplBytes)))
+    err = pageTpl.Execute(w, map[string]interface{}{
+      "Title": pathlib.Base(path),
+      "Parts": crumbs(path),
+      "Styles": pathlib.Join(basePath, "_templates", "style.css"),
+      "Content": template.HTML(b),
+    })
     if err != nil {
       fmt.Fprintln(w, err)
       return

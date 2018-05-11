@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+<head>
+  <title>{{ .Title }} | Maude</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous">
+
+  <link rel="stylesheet" href="{{ .Styles }}">
+</head>
+<body>
+  <ul class="breadcrumbs">
+    {{ range $index, $element := .Parts }}
+      <li>{{if $index}}<span class="crumb-sep">/</span>{{end}}<a href="{{ $element.Path }}">{{ $element.Name }}</a></li>
+    {{ end }}
+  </ul>
+
+<div class="page-content">{{ .Content }}</div>
+
+<footer>
+  <p>Powered by <a href="https://github.com/buchanae/maude">maude</a></p>
+</footer>
+
+</body>
+</html>

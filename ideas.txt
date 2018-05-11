@@ -1,5 +1,4 @@
 image thumbnails
-stylesheet for markdown
 render notebooks
 file metadata
 render templates
