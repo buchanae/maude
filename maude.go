@@ -16,6 +16,7 @@ import (
 
   "gopkg.in/russross/blackfriday.v2"
   "github.com/alecthomas/chroma/quick"
+  "github.com/elazarl/go-bindata-assetfs"
 )
 
 var basePath = ""
@@ -130,7 +131,9 @@ type dirent struct {
 
 func listdir(w http.ResponseWriter, req *http.Request, path string) {
   w.Header().Set("Content-Type", "text/html")
-  dirListTpl := template.Must(template.ParseGlob("_templates/*.html"))
+  //dirListTpl := template.Must(template.ParseGlob("_templates/*.html"))
+  dirListTplBytes := MustAsset("dirlist.html")
+  dirListTpl := template.Must(template.New("dirlist").Parse(string(dirListTplBytes)))
 
   files, err := ioutil.ReadDir(path)
   if err != nil {
@@ -167,6 +170,7 @@ func listdir(w http.ResponseWriter, req *http.Request, path string) {
   }
 
   err = dirListTpl.Execute(w, map[string]interface{}{
+    "Title": pathlib.Base(path),
     "List": list,
     "Styles": pathlib.Join(basePath, "_templates", "style.css"),
   })
@@ -259,9 +263,22 @@ func main() {
     }
   })
 
-  http.Handle("/", http.StripPrefix(basePath, handle))
+  mux := http.NewServeMux()
+
+  var fs = http.FileServer(&assetfs.AssetFS{
+    Asset:     Asset,
+    AssetDir:  AssetDir,
+    AssetInfo: AssetInfo,
+  })
+  mux.Handle("/_templates/", http.StripPrefix("/_templates/", fs))
+
+  mux.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
+    log.Println(req.URL)
+    handle(w, req)
+  })
 
   log.Println("Listening on :7279")
+  http.Handle("/", http.StripPrefix(basePath, mux))
   http.ListenAndServe(":7279", nil)
 }
 
