@@ -200,8 +200,13 @@ func listdir(w http.ResponseWriter, req *http.Request, path string) {
     list = append(list, dirent{Name: name, HREF: p, Type: type_})
   }
 
+  title := pathlib.Base(path)
+  if title == "." || title == "" {
+    title = "home"
+  }
+
   err = dirListTpl.Execute(w, map[string]interface{}{
-    "Title": pathlib.Base(path),
+    "Title": title,
     "Parts": crumbs(path),
     "List": list,
     "Styles": pathlib.Clean("/" + pathlib.Join(basePath, "_templates", "style.css")),
