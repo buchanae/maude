@@ -3,6 +3,8 @@
 <head>
   <title>{{ .Title }} | Maude</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous">
+
   <link rel="stylesheet" href="{{ .Styles }}">
 </head>
 <body>
@@ -14,7 +16,7 @@
 <div class="dirlist-wrapper">
   <ul class="dirlist">
   {{ range .List }}
-    <li><a href="{{ .HREF }}">{{ .Name }}</a></li>
+    <li><a href="{{ .HREF }}"><i class="fa fa-{{ .Type }}"></i>{{ .Name }}</a></li>
   {{ end }}
   </ul>
 </div>

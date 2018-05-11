@@ -127,11 +127,11 @@ func newurl(p string) string {
 type dirent struct {
   Name string
   HREF string
+  Type string
 }
 
 func listdir(w http.ResponseWriter, req *http.Request, path string) {
   w.Header().Set("Content-Type", "text/html")
-  //dirListTpl := template.Must(template.ParseGlob("_templates/*.html"))
   dirListTplBytes := MustAsset("dirlist.html")
   dirListTpl := template.Must(template.New("dirlist").Parse(string(dirListTplBytes)))
 
@@ -148,25 +148,26 @@ func listdir(w http.ResponseWriter, req *http.Request, path string) {
 
   var list []dirent
 
-  /*
-  if req.URL.Path != "/" {
-    up, _ := urllib.Parse("./..")
-    u := req.URL.ResolveReference(up)
-    list = append(list, dirent{Name: "..", HREF: newurl(u.String())})
-  }
-  */
-
   for _, file := range files {
     name := file.Name()
+
+    var type_ string
     var p string
+
     if strings.HasSuffix(name, ".href") {
       b, _ := ioutil.ReadFile(filepath.Join(path, name))
       p = strings.TrimSpace(string(b))
       name = strings.TrimSuffix(name, ".href")
+      type_ = "external-link-alt"
     } else {
       p = newurl(pathlib.Clean("/" + pathlib.Join(path, name) + "/"))
     }
-    list = append(list, dirent{Name: name, HREF: p})
+
+    if file.IsDir() {
+      type_ = "folder"
+    }
+
+    list = append(list, dirent{Name: name, HREF: p, Type: type_})
   }
 
   err = dirListTpl.Execute(w, map[string]interface{}{
