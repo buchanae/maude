@@ -171,6 +171,7 @@ func listdir(w http.ResponseWriter, req *http.Request, path string) {
 
   err = dirListTpl.Execute(w, map[string]interface{}{
     "Title": pathlib.Base(path),
+    "Parts": crumbs(path),
     "List": list,
     "Styles": pathlib.Join(basePath, "_templates", "style.css"),
   })
@@ -178,6 +179,26 @@ func listdir(w http.ResponseWriter, req *http.Request, path string) {
     fmt.Fprintln(w, err)
     return
   }
+}
+
+type crumb struct {
+  Name string
+  Path string
+}
+
+func crumbs(path string) []crumb {
+  var p string
+  out := []crumb{
+    {Name: "home", Path: pathlib.Clean(pathlib.Join("/", basePath)) + "/"},
+  }
+  parts := strings.Split(path, "/")
+  for _, part := range parts {
+    if part != "" {
+      p = pathlib.Join(p, part)
+      out = append(out, crumb{Name: part, Path: pathlib.Clean(pathlib.Join("/", basePath, p, "/")) + "/"})
+    }
+  }
+  return out
 }
 
 // exists returns whether the given file or directory exists or not

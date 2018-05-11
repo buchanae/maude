@@ -6,6 +6,11 @@
   <link rel="stylesheet" href="{{ .Styles }}">
 </head>
 <body>
+  <ul class="breadcrumbs">
+    {{ range $index, $element := .Parts }}
+      <li>{{if $index}}<span class="crumb-sep">/</span>{{end}}<a href="{{ $element.Path }}">{{ $element.Name }}</a></li>
+    {{ end }}
+  </ul>
 <div class="dirlist-wrapper">
   <ul class="dirlist">
   {{ range .List }}
@@ -13,6 +18,10 @@
   {{ end }}
   </ul>
 </div>
+
+<footer>
+  <p>Powered by <a href="https://github.com/buchanae/maude">maude</a></p>
+</footer>
 
 </body>
 </html>
