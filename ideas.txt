@@ -1,7 +1,6 @@
 image thumbnails
 stylesheet for markdown
 render notebooks
-render readme in directory list page
 file metadata
 render templates
 

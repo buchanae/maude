@@ -147,12 +147,21 @@ func listdir(w http.ResponseWriter, req *http.Request, path string) {
   files = filterSuffix(files, ".pyc")
 
   var list []dirent
+  var readme string
 
   for _, file := range files {
     name := file.Name()
 
     var type_ string
     var p string
+
+    if strings.ToLower(name) == "readme.md" {
+      inb, err := ioutil.ReadFile(pathlib.Join(path, name))
+      if err == nil {
+        b := blackfriday.Run(inb)
+        readme = string(b)
+      }
+    }
 
     if strings.HasSuffix(name, ".href") {
       b, _ := ioutil.ReadFile(filepath.Join(path, name))
@@ -175,6 +184,7 @@ func listdir(w http.ResponseWriter, req *http.Request, path string) {
     "Parts": crumbs(path),
     "List": list,
     "Styles": pathlib.Join(basePath, "_templates", "style.css"),
+    "Readme": template.HTML(readme),
   })
   if err != nil {
     fmt.Fprintln(w, err)

@@ -37,6 +37,13 @@ i.fa-external-link-alt {
   padding: 0 5px;
 }
 
+.readme {
+    width: 60%;
+    margin: 70px auto;
+    border-top: 1px solid #eee;
+    padding: 30px;
+}
+
 footer {
     color: #ddd;
   text-align: center;
@@ -50,3 +57,4 @@ footer {
 footer a {
     color: #87abcc;
 }
+
