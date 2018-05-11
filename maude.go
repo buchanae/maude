@@ -190,7 +190,7 @@ func listdir(w http.ResponseWriter, req *http.Request, path string) {
       p = newurl(pathlib.Clean("/" + pathlib.Join(path, name) + "/"))
     }
 
-    if file.IsDir() {
+    if info, err := os.Stat(filepath.Join(path, name)); err == nil && info.IsDir() {
       type_ = "folder"
     }
 
