@@ -33,6 +33,5 @@ write from browser
 
 Download link
 
-clickable rows
 
 render API docs

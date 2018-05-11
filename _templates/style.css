@@ -9,7 +9,6 @@ body {
   list-style-type: none;
 }
 .dirlist li {
-  padding: 7px 20px;
   border-radius: 3px;
 }
 .dirlist li:hover {
@@ -18,6 +17,8 @@ body {
 .dirlist li a {
   text-decoration: none;
   color: #0099dc;
+  display: block;
+  padding: 7px 20px;
 }
 .dirlist li i.fa {
   padding: 0 5px;
