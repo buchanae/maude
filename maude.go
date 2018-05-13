@@ -113,6 +113,9 @@ func sendfile(w http.ResponseWriter, path string) {
   case ".md":
     w.Header().Set("Content-Type", "text/html")
     err = markdownPage(w, path)
+  case ".ipynb":
+    w.Header().Set("Content-Type", "text/html")
+    err = notebookPage(w, path)
   default:
     err = highlight(w, path)
     if err == nil {

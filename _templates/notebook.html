@@ -1,0 +1,22 @@
+<head>
+  <link rel="stylesheet" href="{{ .Styles }}">
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.5/require.min.js"></script>
+</head>
+
+<body>
+
+<div class="root-content">
+{{ range .NB.Cells }}
+<div class="cell {{ .CellType }}-cell">
+  <div class="cell-source">{{ .Highlighted }}</div>
+  {{ range .Outputs }}
+  <div class="cell-output">
+    {{- .Formatted -}}
+  </div>
+  {{ end }}
+</div>
+{{ end }}
+</div>
+
+</body>
