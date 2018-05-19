@@ -16,6 +16,7 @@ import (
   //urllib "net/url"
 
   "gopkg.in/russross/blackfriday.v2"
+  "github.com/Depado/bfchroma"
   "github.com/alecthomas/chroma/lexers"
   "github.com/alecthomas/chroma/formatters"
   "github.com/alecthomas/chroma/styles"
@@ -83,16 +84,29 @@ func markdownPage(w io.Writer, path string) error {
   }
   defer f.Close()
 
-  inb, err := ioutil.ReadAll(f)
+  fm, body, err := frontmatter(f)
   if err != nil {
     return err
   }
-  b := blackfriday.Run(inb)
+
+  b := blackfriday.Run(body, blackfriday.WithRenderer(bfchroma.NewRenderer(
+    bfchroma.Style("monokai"),
+  )))
 
   pageTplBytes := MustAsset("page.html")
   pageTpl := template.Must(template.New("page").Parse(string(pageTplBytes)))
+
+  var title string
+  if t, ok := fm["title"].(string); ok {
+    title = t
+  } else {
+    title = pathlib.Base(path)
+    title = strings.Replace(title, ".md", "", -1)
+    title = strings.Replace(title, ".html", "", -1)
+  }
+
   return pageTpl.Execute(w, map[string]interface{}{
-    "Title": pathlib.Base(path),
+    "Title": title,
     "Parts": crumbs(path),
     "Styles": pathlib.Clean("/" + pathlib.Join(basePath, "_templates", "style.css")),
     "Content": template.HTML(b),

@@ -45,9 +45,17 @@ i.fa-external-link-alt {
     padding: 30px;
 }
 .page-content {
-    width: 60%;
+    width: 54%;
     margin: 0 auto;
     padding: 30px;
+}
+pre {
+  padding: 10px;
+  border-radius: 3px;
+  overflow-x: auto;
+}
+.page-content img {
+  width: 95%;
 }
 
 footer {
