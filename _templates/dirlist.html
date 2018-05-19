@@ -13,6 +13,8 @@
       <li>{{if $index}}<span class="crumb-sep">/</span>{{end}}{{ if $element.Path }}<a href="{{ $element.Path }}">{{ $element.Name }}</a>{{ else }}{{ $element.Name }}{{ end }}</li>
     {{ end }}
   </ul>
+  <input id="search" type="text" style="display:none" />
+
 <div class="dirlist-wrapper">
   <ul class="dirlist">
   {{ range .List }}
@@ -22,6 +24,110 @@
 </div>
 
 <div class="readme">{{ .Readme }}</div>
+
+<script
+  src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+  integrity="sha256-3edrmyuQ0w65f8gfBsqowzjJe2iM6n0nKciPUp8y+7E="
+  crossorigin="anonymous"></script>
+
+<script type="text/javascript">
+
+var names = []
+var els = []
+
+var alpharx = new RegExp(/[A-Z]/)
+var search = ""
+
+$(".dirlist li a").each(function(i, el) {
+  var text = $(el).text().toLowerCase()
+  names.push(text)
+  els.push(el)
+})
+
+$("body").keypress(function(ev) {
+
+  console.log(ev.which)
+
+  if (ev.metaKey) {
+    return
+  }
+
+  var c = String.fromCharCode(ev.which)
+  if (alpharx.test(c)) {
+    c = c.toLowerCase()
+  }
+
+  search += c
+  dosearch(search)
+
+  if (ev.which == 13) {
+    dosearch(search, true)
+    return
+  }
+
+  // "/" key for search
+  if (ev.which == 47) {
+    ev.preventDefault()
+    $("#search").focus()
+  }
+})
+
+
+function dosearch(q, go) {
+  console.log(q)
+  for (var i = 0; i < names.length; i++) {
+    var name = names[i]
+    var el = els[i]
+    if (name.startsWith(q)) {
+      if (go) {
+        $(el).click()
+        return
+      }
+      $(el).focus()
+      return
+    }
+  }
+
+  try {
+    var rx = new RegExp(search)
+  } catch {
+    return
+  }
+
+  for (var i = 0; i < names.length; i++) {
+    var name = names[i]
+    var el = els[i]
+    if (rx.test(name)) {
+      $(el).focus()
+      return
+    }
+  }
+}
+
+$("body").keypress(debounce(function(ev) {
+  var q = search
+  search = ""
+}, 600))
+
+// Returns a function, that, as long as it continues to be invoked, will not
+// be triggered. The function will be called after it stops being called for
+// N milliseconds. If `immediate` is passed, trigger the function on the
+// leading edge, instead of the trailing.
+function debounce(func, wait, immediate) {
+	var timeout;
+	return function() {
+		var context = this, args = arguments;
+		var later = function() {
+			timeout = null;
+			if (!immediate) func.apply(context, args);
+		};
+		var callNow = immediate && !timeout;
+		clearTimeout(timeout);
+		timeout = setTimeout(later, wait);
+		if (callNow) func.apply(context, args);
+	};
+};
+</script>
 
 <footer>
   <p>Powered by <a href="https://github.com/buchanae/maude">maude</a></p>

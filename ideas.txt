@@ -1,4 +1,3 @@
-render notebooks
 file metadata
 render templates
 
@@ -9,8 +8,7 @@ git repo
 
 funnel tasks
 
-render csv/tsv
-render json/yaml
+render csv
 
 image thumbnails
 
