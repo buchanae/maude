@@ -19,7 +19,6 @@ import (
   "github.com/Depado/bfchroma"
   "github.com/alecthomas/chroma/lexers"
   "github.com/alecthomas/chroma/formatters"
-  "github.com/alecthomas/chroma/styles"
   "github.com/elazarl/go-bindata-assetfs"
 )
 
@@ -37,7 +36,6 @@ func highlight(w io.Writer, filename string) error {
     return errUnidentifiedLanguage
   }
 
-  style := styles.Get("monokai")
   formatter := formatters.Get("html")
 
   f, err := os.Open(filename)
@@ -56,7 +54,7 @@ func highlight(w io.Writer, filename string) error {
     return err
   }
 
-  err = formatter.Format(w, style, iterator)
+  err = formatter.Format(w, Style, iterator)
   if err != nil {
     return err
   }
@@ -90,7 +88,7 @@ func markdownPage(w io.Writer, path string) error {
   }
 
   b := blackfriday.Run(body, blackfriday.WithRenderer(bfchroma.NewRenderer(
-    bfchroma.Style("monokai"),
+    bfchroma.ChromaStyle(Style),
   )))
 
   pageTplBytes := MustAsset("page.html")
