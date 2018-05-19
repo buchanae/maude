@@ -64,3 +64,6 @@ footer a {
     color: #87abcc;
 }
 
+td {
+  padding: 0 7px;
+}

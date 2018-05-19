@@ -1,6 +1,7 @@
 package main
 
 import (
+  "encoding/csv"
   "fmt"
   "flag"
   pathlib "path"
@@ -98,6 +99,42 @@ func markdownPage(w io.Writer, path string) error {
   })
 }
 
+func renderTable(w http.ResponseWriter, path string) error {
+
+  f, err := os.Open(path)
+  if err != nil {
+    return err
+  }
+  defer f.Close()
+
+  r := csv.NewReader(f)
+  r.Comma = '\t'
+  r.ReuseRecord = true
+
+  styleBytes := MustAsset("style.css")
+  fmt.Fprintf(w, "<style>")
+  w.Write(styleBytes)
+  fmt.Fprintf(w, "</style>")
+
+  fmt.Fprintf(w, "<table>")
+  for {
+    rec, err := r.Read()
+    if err == io.EOF {
+      break
+    }
+    if err != nil {
+      return err
+    }
+    fmt.Fprintf(w, "<tr>")
+    for _, col := range rec {
+      fmt.Fprintf(w, "<td>%s</td>", col)
+    }
+    fmt.Fprintf(w, "</tr>")
+  }
+  fmt.Fprintf(w, "</table>")
+  return nil
+}
+
 func sendfile(w http.ResponseWriter, path string) {
 
   var err error
@@ -116,6 +153,9 @@ func sendfile(w http.ResponseWriter, path string) {
   case ".ipynb":
     w.Header().Set("Content-Type", "text/html")
     err = notebookPage(w, path)
+  case ".tsv":
+    w.Header().Set("Content-Type", "text/html")
+    err = renderTable(w, path)
   default:
     err = highlight(w, path)
     if err == nil {
