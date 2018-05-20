@@ -9,18 +9,7 @@
     <link rel="stylesheet" href="{{ . }}">
   {{ end }}
 </head>
-<body>
-  <ul class="breadcrumbs">
-    {{ range $index, $element := .Parts }}
-      <li>{{if $index}}<span class="crumb-sep">/</span>{{end}}<a href="{{ $element.Path }}">{{ $element.Name }}</a></li>
-    {{ end }}
-  </ul>
-
-<div class="page-content">{{ .Content }}</div>
-
-<footer>
-  <p>Powered by <a href="https://github.com/buchanae/maude">maude</a></p>
-</footer>
-
+<body class="chroma">
+{{ .Content }}
 </body>
 </html>

@@ -1,6 +1,7 @@
 package main
 
 import (
+  "bytes"
   "encoding/csv"
   "fmt"
   "flag"
@@ -18,7 +19,7 @@ import (
   "gopkg.in/russross/blackfriday.v2"
   "github.com/Depado/bfchroma"
   "github.com/alecthomas/chroma/lexers"
-  "github.com/alecthomas/chroma/formatters"
+  "github.com/alecthomas/chroma/formatters/html"
   "github.com/elazarl/go-bindata-assetfs"
 )
 
@@ -36,7 +37,7 @@ func highlight(w io.Writer, filename string) error {
     return errUnidentifiedLanguage
   }
 
-  formatter := formatters.Get("html")
+  formatter := html.New(html.WithClasses())
 
   f, err := os.Open(filename)
   if err != nil {
@@ -54,11 +55,30 @@ func highlight(w io.Writer, filename string) error {
     return err
   }
 
-  err = formatter.Format(w, Style, iterator)
+  buf := &bytes.Buffer{}
+  err = formatter.Format(buf, Style, iterator)
   if err != nil {
     return err
   }
-  return nil
+
+  pageTplBytes := MustAsset("file.html")
+  pageTpl := template.Must(template.New("page").Parse(string(pageTplBytes)))
+  title := pathlib.Base(filename)
+
+  return pageTpl.Execute(w, map[string]interface{}{
+    "Title": title,
+    "Parts": crumbs(filename, title),
+    "Styles": stylePaths("chroma.css", "style.css"),
+    "Content": template.HTML(buf.Bytes()),
+  })
+}
+
+func stylePaths(names ...string) []string {
+  var out []string
+  for _, name := range names {
+    out = append(out, pathlib.Clean("/" + pathlib.Join(basePath, "_templates", name)))
+  }
+  return out
 }
 
 func isIndex(path string) (string, bool) {
@@ -106,7 +126,7 @@ func markdownPage(w io.Writer, path string) error {
   return pageTpl.Execute(w, map[string]interface{}{
     "Title": title,
     "Parts": crumbs(path, title),
-    "Styles": pathlib.Clean("/" + pathlib.Join(basePath, "_templates", "style.css")),
+    "Styles": stylePaths("chroma.css", "style.css"),
     "Content": template.HTML(b),
   })
 }
@@ -261,7 +281,7 @@ func listdir(w http.ResponseWriter, req *http.Request, path string) {
     "Title": title,
     "Parts": crumbs(path, title),
     "List": list,
-    "Styles": pathlib.Clean("/" + pathlib.Join(basePath, "_templates", "style.css")),
+    "Styles": stylePaths("chroma.css", "style.css"),
     "Readme": template.HTML(readme),
   })
   if err != nil {
@@ -385,6 +405,11 @@ func main() {
     Asset:     Asset,
     AssetDir:  AssetDir,
     AssetInfo: AssetInfo,
+  })
+  mux.HandleFunc("/_templates/chroma.css", func(w http.ResponseWriter, req *http.Request) {
+    w.Header().Set("Content-Type", "text/css")
+    formatter := html.New()
+    formatter.WriteCSS(w, Style)
   })
   mux.Handle("/_templates/", http.StripPrefix("/_templates/", fs))
 
