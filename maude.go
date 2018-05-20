@@ -105,7 +105,7 @@ func markdownPage(w io.Writer, path string) error {
 
   return pageTpl.Execute(w, map[string]interface{}{
     "Title": title,
-    "Parts": crumbs(path),
+    "Parts": crumbs(path, title),
     "Styles": pathlib.Clean("/" + pathlib.Join(basePath, "_templates", "style.css")),
     "Content": template.HTML(b),
   })
@@ -259,7 +259,7 @@ func listdir(w http.ResponseWriter, req *http.Request, path string) {
 
   err = dirListTpl.Execute(w, map[string]interface{}{
     "Title": title,
-    "Parts": crumbs(path),
+    "Parts": crumbs(path, title),
     "List": list,
     "Styles": pathlib.Clean("/" + pathlib.Join(basePath, "_templates", "style.css")),
     "Readme": template.HTML(readme),
@@ -275,13 +275,13 @@ type crumb struct {
   Path string
 }
 
-func crumbs(path string) []crumb {
+func crumbs(path, title string) []crumb {
   var p string
   out := []crumb{
     {Name: "home", Path: pathlib.Clean(pathlib.Join("/", basePath))},
   }
   parts := strings.Split(path, "/")
-  for _, part := range parts {
+  for _, part := range parts[:len(parts)-1] {
     if part == "." {
       continue
     }
